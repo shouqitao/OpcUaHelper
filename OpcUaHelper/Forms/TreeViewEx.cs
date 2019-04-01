@@ -5,18 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OpcUaHelper.Forms
-{
+namespace OpcUaHelper.Forms {
     /// <summary>
     /// 无闪烁的树节点控件，结果还是没有实现
     /// </summary>
-    public class TreeViewEx : TreeView
-    {
+    public class TreeViewEx : TreeView {
         /// <summary>
         /// 实例化一个新的控件
         /// </summary>
-        public TreeViewEx()
-        {
+        public TreeViewEx() {
             // 开启双缓冲
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
 
@@ -29,14 +26,11 @@ namespace OpcUaHelper.Forms
         /// 通知
         /// </summary>
         /// <param name="m"></param>
-        protected override void OnNotifyMessage(Message m)
-        {
+        protected override void OnNotifyMessage(Message m) {
             //Filter out the WM_ERASEBKGND message
-            if (m.Msg != 0x14)
-            {
+            if (m.Msg != 0x14) {
                 base.OnNotifyMessage(m);
             }
-
         }
 
         //protected override void WndProc(ref Message m)

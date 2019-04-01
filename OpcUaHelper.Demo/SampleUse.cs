@@ -4,12 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpcUaHelper.Demo
-{
-    public class SampleUse
-    {
-
-
-
-    }
+namespace OpcUaHelper.Demo {
+    public class SampleUse { }
 }

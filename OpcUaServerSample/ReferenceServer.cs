@@ -33,8 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
-namespace OpcUaServerSample
-{
+namespace OpcUaServerSample {
     /// <summary>
     /// Implements a basic SharpNodeSettings Server.
     /// </summary>
@@ -46,9 +45,9 @@ namespace OpcUaServerSample
     /// This sub-class specifies non-configurable metadata such as Product Name and initializes
     /// the EmptyNodeManager which provides access to the data exposed by the Server.
     /// </remarks>
-    public partial class SharpNodeSettingsServer : StandardServer
-    {
+    public partial class SharpNodeSettingsServer : StandardServer {
         #region Overridden Methods
+
         /// <summary>
         /// Creates the node managers for the server.
         /// </summary>
@@ -57,8 +56,8 @@ namespace OpcUaServerSample
         /// always creates a CoreNodeManager which handles the built-in nodes defined by the specification.
         /// Any additional NodeManagers are expected to handle application specific nodes.
         /// </remarks>
-        protected override MasterNodeManager CreateMasterNodeManager(IServerInternal server, ApplicationConfiguration configuration)
-        {
+        protected override MasterNodeManager CreateMasterNodeManager(IServerInternal server,
+            ApplicationConfiguration configuration) {
             Utils.Trace("Creating the Node Managers.");
 
             List<INodeManager> nodeManagers = new List<INodeManager>();
@@ -76,8 +75,7 @@ namespace OpcUaServerSample
         /// <remarks>
         /// These properties are exposed by the server but cannot be changed by administrators.
         /// </remarks>
-        protected override ServerProperties LoadServerProperties()
-        {
+        protected override ServerProperties LoadServerProperties() {
             ServerProperties properties = new ServerProperties();
 
             properties.ManufacturerName = "Richard Hu";
@@ -95,18 +93,18 @@ namespace OpcUaServerSample
         /// <summary>
         /// Creates the resource manager for the server.
         /// </summary>
-        protected override ResourceManager CreateResourceManager(IServerInternal server, ApplicationConfiguration configuration)
-        {
+        protected override ResourceManager CreateResourceManager(IServerInternal server,
+            ApplicationConfiguration configuration) {
             ResourceManager resourceManager = new ResourceManager(server, configuration);
 
-            System.Reflection.FieldInfo[] fields = typeof(StatusCodes).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            System.Reflection.FieldInfo[] fields =
+                typeof(StatusCodes).GetFields(System.Reflection.BindingFlags.Public |
+                                              System.Reflection.BindingFlags.Static);
 
-            foreach (System.Reflection.FieldInfo field in fields)
-            {
+            foreach (System.Reflection.FieldInfo field in fields) {
                 uint? id = field.GetValue(typeof(StatusCodes)) as uint?;
 
-                if (id != null)
-                {
+                if (id != null) {
                     resourceManager.Add(id.Value, "en-US", field.Name);
                 }
             }
@@ -117,8 +115,7 @@ namespace OpcUaServerSample
         /// <summary>
         /// Called after the server has been started.
         /// </summary>
-        protected override void OnServerStarted(IServerInternal server)
-        {
+        protected override void OnServerStarted(IServerInternal server) {
             base.OnServerStarted(server);
 
             // request notifications when the user identity is changed. all valid users are accepted by default.
@@ -128,16 +125,15 @@ namespace OpcUaServerSample
         #endregion
 
         #region User Validation Functions
+
         /// <summary>
         /// Called when a client tries to change its user identity.
         /// </summary>
-        private void SessionManager_ImpersonateUser(Session session, ImpersonateEventArgs args)
-        {
+        private void SessionManager_ImpersonateUser(Session session, ImpersonateEventArgs args) {
             // check for a user name token.
             UserNameIdentityToken userNameToken = args.NewIdentity as UserNameIdentityToken;
 
-            if (userNameToken != null)
-            {
+            if (userNameToken != null) {
                 args.Identity = VerifyPassword(userNameToken);
                 return;
             }
@@ -145,8 +141,7 @@ namespace OpcUaServerSample
             // check for x509 user token.
             X509IdentityToken x509Token = args.NewIdentity as X509IdentityToken;
 
-            if (x509Token != null)
-            {
+            if (x509Token != null) {
                 VerifyUserTokenCertificate(x509Token.Certificate);
                 args.Identity = new UserIdentity(x509Token);
                 Utils.Trace("X509 Token Accepted: {0}", args.Identity.DisplayName);
@@ -157,34 +152,29 @@ namespace OpcUaServerSample
         /// <summary>
         /// Validates the password for a username token.
         /// </summary>
-        private IUserIdentity VerifyPassword(UserNameIdentityToken userNameToken)
-        {
+        private IUserIdentity VerifyPassword(UserNameIdentityToken userNameToken) {
             var userName = userNameToken.UserName;
             var password = userNameToken.DecryptedPassword;
-            if (String.IsNullOrEmpty(userName))
-            {
+            if (String.IsNullOrEmpty(userName)) {
                 // an empty username is not accepted.
                 throw ServiceResultException.Create(StatusCodes.BadIdentityTokenInvalid,
                     "Security token is not a valid username token. An empty username is not accepted.");
             }
 
-            if (String.IsNullOrEmpty(password))
-            {
+            if (String.IsNullOrEmpty(password)) {
                 // an empty password is not accepted.
                 throw ServiceResultException.Create(StatusCodes.BadIdentityTokenRejected,
                     "Security token is not a valid username token. An empty password is not accepted.");
             }
 
             // User with permission to configure server
-            if (userName == "sysadmin" && password == "demo")
-            {
+            if (userName == "sysadmin" && password == "demo") {
                 return new SystemConfigurationIdentity(new UserIdentity(userNameToken));
             }
 
             // standard users for CTT verification
             if (!((userName == "user1" && password == "password") ||
-                (userName == "user2" && password == "password1")))
-            {
+                  (userName == "user2" && password == "password1"))) {
                 // construct translation object with default text.
                 TranslationInfo info = new TranslationInfo(
                     "InvalidPassword",
@@ -206,28 +196,22 @@ namespace OpcUaServerSample
         /// <summary>
         /// Verifies that a certificate user token is trusted.
         /// </summary>
-        private void VerifyUserTokenCertificate(X509Certificate2 certificate)
-        {
-            try
-            {
+        private void VerifyUserTokenCertificate(X509Certificate2 certificate) {
+            try {
                 CertificateValidator.Validate(certificate);
 
                 // determine if self-signed.
                 bool isSelfSigned = Utils.CompareDistinguishedName(certificate.Subject, certificate.Issuer);
 
                 // do not allow self signed application certs as user token
-                if (isSelfSigned && Utils.HasApplicationURN(certificate))
-                {
+                if (isSelfSigned && Utils.HasApplicationURN(certificate)) {
                     throw new ServiceResultException(StatusCodes.BadCertificateUseNotAllowed);
                 }
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 TranslationInfo info;
                 StatusCode result = StatusCodes.BadIdentityTokenRejected;
                 ServiceResultException se = e as ServiceResultException;
-                if (se != null && se.StatusCode == StatusCodes.BadCertificateUseNotAllowed)
-                {
+                if (se != null && se.StatusCode == StatusCodes.BadCertificateUseNotAllowed) {
                     info = new TranslationInfo(
                         "InvalidCertificate",
                         "en-US",
@@ -235,9 +219,7 @@ namespace OpcUaServerSample
                         certificate.Subject);
 
                     result = StatusCodes.BadIdentityTokenInvalid;
-                }
-                else
-                {
+                } else {
                     // construct translation object with default text.
                     info = new TranslationInfo(
                         "UntrustedCertificate",
@@ -256,8 +238,9 @@ namespace OpcUaServerSample
         }
 
         #region Private Fields
-        #endregion
+
         #endregion
 
+        #endregion
     }
 }

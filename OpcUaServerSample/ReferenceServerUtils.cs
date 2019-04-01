@@ -33,15 +33,12 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace OpcUaServerSample
-{
+namespace OpcUaServerSample {
     /// <summary>
     /// The interface that a server exposes to objects that it contains.
     /// </summary>
-    public static class ServerUtils
-    {
-        private enum EventType
-        {
+    public static class ServerUtils {
+        private enum EventType {
             WriteValue,
             CreateItem,
             ModifyItem,
@@ -51,8 +48,7 @@ namespace OpcUaServerSample
             PublishValue
         }
 
-        private class Event
-        {
+        private class Event {
             public DateTime Timestamp;
             public EventType EventType;
             public NodeId NodeId;
@@ -68,34 +64,27 @@ namespace OpcUaServerSample
         /// <summary>
         /// Whether event queuing is enabled.
         /// </summary>
-        public static bool EventsEnabled
-        {
+        public static bool EventsEnabled {
             get { return m_eventsEnabled; }
-            
-            set 
-            {
-                if (m_eventsEnabled != value)
-                {
-                    if (!value)
-                    {
-                        lock (m_events)
-                        {
+
+            set {
+                if (m_eventsEnabled != value) {
+                    if (!value) {
+                        lock (m_events) {
                             m_events.Clear();
                         }
                     }
                 }
 
-                m_eventsEnabled = value; 
+                m_eventsEnabled = value;
             }
         }
 
         /// <summary>
         /// Empties the event queue and saves it in the dataset.
         /// </summary>
-        public static DataSet EmptyQueue(DataSet dataset)
-        {
-            if (dataset == null)
-            {
+        public static DataSet EmptyQueue(DataSet dataset) {
+            if (dataset == null) {
                 dataset = new DataSet();
                 dataset.Tables.Add("MonitoredItems");
 
@@ -116,10 +105,8 @@ namespace OpcUaServerSample
                 dataset.Tables[0].DefaultView.Sort = "Timestamp";
             }
 
-            lock (m_events)
-            {
-                while (m_events.Count > 0)
-                {
+            lock (m_events) {
+                while (m_events.Count > 0) {
                     Event e = m_events.Dequeue();
 
                     DataRow row = dataset.Tables[0].NewRow();
@@ -129,21 +116,18 @@ namespace OpcUaServerSample
                     row[2] = e.EventType.ToString();
                     row[3] = e.NodeId;
 
-                    if (e.Parameters != null)
-                    {
+                    if (e.Parameters != null) {
                         row[4] = e.MonitoringMode;
                         row[5] = e.Parameters.SamplingInterval;
                         row[6] = e.Parameters.QueueSize;
                         row[7] = e.Parameters.DiscardOldest;
 
-                        if (e.Parameters.Filter != null)
-                        {
+                        if (e.Parameters.Filter != null) {
                             row[8] = e.Parameters.Filter.ToString();
                         }
                     }
 
-                    if (e.Value != null)
-                    {
+                    if (e.Value != null) {
                         row[9] = e.Value.WrappedValue;
                         row[10] = e.Value.StatusCode;
                         row[11] = e.Value.ServerTimestamp.ToLocalTime().ToString("HH:mm:ss.fff");
@@ -161,15 +145,12 @@ namespace OpcUaServerSample
         /// <summary>
         /// Reports a value written.
         /// </summary>
-        public static void ReportWriteValue(NodeId nodeId, DataValue value, StatusCode error)
-        {
-            if (!m_eventsEnabled)
-            {
+        public static void ReportWriteValue(NodeId nodeId, DataValue value, StatusCode error) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.WriteValue;
                 e.NodeId = nodeId;
@@ -179,8 +160,7 @@ namespace OpcUaServerSample
                 e.Parameters = null;
                 e.MonitoringMode = MonitoringMode.Disabled;
 
-                if (StatusCode.IsBad(error))
-                {
+                if (StatusCode.IsBad(error)) {
                     e.Value = new DataValue(error);
                     e.Value.WrappedValue = value.WrappedValue;
                 }
@@ -192,15 +172,12 @@ namespace OpcUaServerSample
         /// <summary>
         /// Reports a value queued.
         /// </summary>
-        public static void ReportQueuedValue(NodeId nodeId, uint serverHandle, DataValue value)
-        {
-            if (!m_eventsEnabled)
-            {
+        public static void ReportQueuedValue(NodeId nodeId, uint serverHandle, DataValue value) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.QueueValue;
                 e.NodeId = nodeId;
@@ -216,15 +193,12 @@ namespace OpcUaServerSample
         /// <summary>
         /// Reports a value excluded by the filter.
         /// </summary>
-        public static void ReportFilteredValue(NodeId nodeId, uint serverHandle, DataValue value)
-        {
-            if (!m_eventsEnabled)
-            {
+        public static void ReportFilteredValue(NodeId nodeId, uint serverHandle, DataValue value) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.FilterValue;
                 e.NodeId = nodeId;
@@ -240,15 +214,12 @@ namespace OpcUaServerSample
         /// <summary>
         /// Reports a value discarded because of queue overflow.
         /// </summary>
-        public static void ReportDiscardedValue(NodeId nodeId, uint serverHandle, DataValue value)
-        {
-            if (!m_eventsEnabled)
-            {
+        public static void ReportDiscardedValue(NodeId nodeId, uint serverHandle, DataValue value) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.DiscardValue;
                 e.NodeId = nodeId;
@@ -264,15 +235,12 @@ namespace OpcUaServerSample
         /// <summary>
         /// Reports a value published.
         /// </summary>
-        public static void ReportPublishValue(NodeId nodeId, uint serverHandle, DataValue value)
-        {
-            if (!m_eventsEnabled)
-            {
+        public static void ReportPublishValue(NodeId nodeId, uint serverHandle, DataValue value) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.PublishValue;
                 e.NodeId = nodeId;
@@ -289,21 +257,18 @@ namespace OpcUaServerSample
         /// Reports a new monitored item.
         /// </summary>
         public static void ReportCreateMonitoredItem(
-            NodeId nodeId, 
+            NodeId nodeId,
             uint serverHandle,
             double samplingInterval,
             uint queueSize,
             bool discardOldest,
             MonitoringFilter filter,
-            MonitoringMode monitoringMode)
-        {
-            if (!m_eventsEnabled)
-            {
+            MonitoringMode monitoringMode) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.CreateItem;
                 e.NodeId = nodeId;
@@ -330,15 +295,12 @@ namespace OpcUaServerSample
             uint queueSize,
             bool discardOldest,
             MonitoringFilter filter,
-            MonitoringMode monitoringMode)
-        {
-            if (!m_eventsEnabled)
-            {
+            MonitoringMode monitoringMode) {
+            if (!m_eventsEnabled) {
                 return;
             }
 
-            lock (m_events)
-            {
+            lock (m_events) {
                 Event e = new Event();
                 e.EventType = EventType.ModifyItem;
                 e.NodeId = nodeId;
@@ -356,147 +318,128 @@ namespace OpcUaServerSample
         }
 
         #region Error and Diagnostics
+
         /// <summary>
         /// Fills in the diagnostic information after an error.
         /// </summary>
         public static uint CreateError(
-            uint                     code, 
-            OperationContext         context, 
-            DiagnosticInfoCollection diagnosticInfos, 
-            int                      index)
-        {
+            uint code,
+            OperationContext context,
+            DiagnosticInfoCollection diagnosticInfos,
+            int index) {
             ServiceResult error = new ServiceResult(code);
-            
-            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-            {
+
+            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0) {
                 diagnosticInfos[index] = new DiagnosticInfo(error, context.DiagnosticsMask, false, context.StringTable);
             }
 
             return error.Code;
         }
-        
+
         /// <summary>
         /// Fills in the diagnostic information after an error.
         /// </summary>
         public static bool CreateError(
-            uint                      code,  
-            StatusCodeCollection      results,
-            DiagnosticInfoCollection  diagnosticInfos, 
-            OperationContext          context)
-        {
+            uint code,
+            StatusCodeCollection results,
+            DiagnosticInfoCollection diagnosticInfos,
+            OperationContext context) {
             ServiceResult error = new ServiceResult(code);
             results.Add(error.Code);
-            
-            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-            {
+
+            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0) {
                 diagnosticInfos.Add(new DiagnosticInfo(error, context.DiagnosticsMask, false, context.StringTable));
                 return true;
             }
 
             return false;
         }
-        
+
         /// <summary>
         /// Fills in the diagnostic information after an error.
         /// </summary>
         public static bool CreateError(
-            uint                     code,  
-            StatusCodeCollection     results,
-            DiagnosticInfoCollection diagnosticInfos, 
-            int                      index,
-            OperationContext         context)
-        {
+            uint code,
+            StatusCodeCollection results,
+            DiagnosticInfoCollection diagnosticInfos,
+            int index,
+            OperationContext context) {
             ServiceResult error = new ServiceResult(code);
             results[index] = error.Code;
-            
-            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-            {
+
+            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0) {
                 diagnosticInfos[index] = new DiagnosticInfo(error, context.DiagnosticsMask, false, context.StringTable);
                 return true;
             }
 
             return false;
         }
-        
+
         /// <summary>
         /// Creates a place holder in the lists for the results.
         /// </summary>
         public static void CreateSuccess(
-            StatusCodeCollection     results,
+            StatusCodeCollection results,
             DiagnosticInfoCollection diagnosticInfos,
-            OperationContext         context)
-        {
+            OperationContext context) {
             results.Add(StatusCodes.Good);
-            
-            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-            {
+
+            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0) {
                 diagnosticInfos.Add(null);
             }
         }
-        
+
         /// <summary>
         /// Creates a collection of diagnostics from a set of errors.
         /// </summary>
         public static DiagnosticInfoCollection CreateDiagnosticInfoCollection(
-            OperationContext     context,
-            IList<ServiceResult> errors)
-        {
+            OperationContext context,
+            IList<ServiceResult> errors) {
             // all done if no diagnostics requested.
-            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) == 0)
-            {
+            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) == 0) {
                 return null;
             }
-            
+
             // create diagnostics.
             DiagnosticInfoCollection results = new DiagnosticInfoCollection(errors.Count);
 
-            foreach (ServiceResult error in errors)
-            {
-                if (ServiceResult.IsBad(error))
-                {
+            foreach (ServiceResult error in errors) {
+                if (ServiceResult.IsBad(error)) {
                     results.Add(new DiagnosticInfo(error, context.DiagnosticsMask, false, context.StringTable));
-                }
-                else
-                {
+                } else {
                     results.Add(null);
                 }
             }
 
             return results;
         }
-        
+
         /// <summary>
         /// Creates a collection of status codes and diagnostics from a set of errors.
         /// </summary>
         public static StatusCodeCollection CreateStatusCodeCollection(
-            OperationContext             context,
-            IList<ServiceResult>         errors, 
-            out DiagnosticInfoCollection diagnosticInfos)
-        {
+            OperationContext context,
+            IList<ServiceResult> errors,
+            out DiagnosticInfoCollection diagnosticInfos) {
             diagnosticInfos = null;
 
             bool noErrors = true;
             StatusCodeCollection results = new StatusCodeCollection(errors.Count);
 
-            foreach (ServiceResult error in errors)
-            {
-                if (ServiceResult.IsBad(error))
-                {
+            foreach (ServiceResult error in errors) {
+                if (ServiceResult.IsBad(error)) {
                     results.Add(error.Code);
                     noErrors = false;
-                }
-                else
-                {
+                } else {
                     results.Add(StatusCodes.Good);
                 }
             }
 
             // only generate diagnostics if errors exist.
-            if (noErrors)
-            {
+            if (noErrors) {
                 diagnosticInfos = CreateDiagnosticInfoCollection(context, errors);
             }
-            
+
             return results;
         }
 
@@ -508,30 +451,28 @@ namespace OpcUaServerSample
         /// <param name="error">The error to translate.</param>
         /// <returns>The diagnostics with references to the strings in the context string table.</returns>
         public static DiagnosticInfo CreateDiagnosticInfo(
-            IServerInternal  server,
+            IServerInternal server,
             OperationContext context,
-            ServiceResult    error)
-        {
-            if (error == null)
-            {
+            ServiceResult error) {
+            if (error == null) {
                 return null;
             }
 
             ServiceResult translatedError = error;
 
-            if ((context.DiagnosticsMask & DiagnosticsMasks.LocalizedText) != 0)
-            {
+            if ((context.DiagnosticsMask & DiagnosticsMasks.LocalizedText) != 0) {
                 translatedError = server.ResourceManager.Translate(context.PreferredLocales, error);
             }
 
             DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
-                translatedError, 
-                context.DiagnosticsMask, 
-                false, 
+                translatedError,
+                context.DiagnosticsMask,
+                false,
                 context.StringTable);
 
             return diagnosticInfo;
         }
+
         #endregion
     }
 }

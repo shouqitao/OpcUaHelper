@@ -11,32 +11,28 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OpcUaHelper.Forms
-{
-
+namespace OpcUaHelper.Forms {
     /// <summary>
     /// 一个浏览OPC服务器节点的窗口类
     /// </summary>
-    public partial class FormBrowseServer : Form
-    {
+    public partial class FormBrowseServer : Form {
         #region Constructor
+
         /// <summary>
         /// 允许自己输入服务器地址的实例化
         /// </summary>
-        public FormBrowseServer()
-        {
+        public FormBrowseServer() {
             InitializeComponent();
-            
+
             Icon = ClientUtils.GetAppIcon();
         }
 
         /// <summary>
         /// 固定地址且不允许更改的实例化
         /// </summary>
-        public FormBrowseServer(string server)
-        {
+        public FormBrowseServer(string server) {
             InitializeComponent();
-            
+
             Icon = ClientUtils.GetAppIcon();
             textBox1.Text = server;
         }
@@ -45,9 +41,7 @@ namespace OpcUaHelper.Forms
 
         #region Load Show Close
 
-
-        private void FormBrowseServer_Load(object sender, EventArgs e)
-        {
+        private void FormBrowseServer_Load(object sender, EventArgs e) {
             BrowseNodesTV.Enabled = false;
 
             BrowseNodesTV.ImageList = new ImageList();
@@ -67,60 +61,37 @@ namespace OpcUaHelper.Forms
         }
 
 
+        private string GetImageKeyFromDescription(ReferenceDescription target, NodeId sourceId) {
+            if (target.NodeClass == NodeClass.Variable) {
+                DataValue dataValue = m_OpcUaClient.ReadNode((NodeId) target.NodeId);
 
-        private string GetImageKeyFromDescription(ReferenceDescription target, NodeId sourceId)
-        {
-            if (target.NodeClass == NodeClass.Variable)
-            {
-                DataValue dataValue = m_OpcUaClient.ReadNode((NodeId)target.NodeId);
-
-                if (dataValue.WrappedValue.TypeInfo != null)
-                {
-                    if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.Scalar)
-                    {
+                if (dataValue.WrappedValue.TypeInfo != null) {
+                    if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.Scalar) {
                         return "Enum_582";
-                    }
-                    else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.OneDimension)
-                    {
+                    } else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.OneDimension) {
                         return "brackets";
-                    }
-                    else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.TwoDimensions)
-                    {
+                    } else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.TwoDimensions) {
                         return "Module_648";
-                    }
-                    else
-                    {
+                    } else {
                         return "ClassIcon";
                     }
-                }
-                else
-                {
+                } else {
                     return "ClassIcon";
                 }
-            }
-            else if (target.NodeClass == NodeClass.Object)
-            {
-                if (sourceId == ObjectIds.ObjectsFolder)
-                {
+            } else if (target.NodeClass == NodeClass.Object) {
+                if (sourceId == ObjectIds.ObjectsFolder) {
                     return "VirtualMachine";
-                }
-                else
-                {
+                } else {
                     return "ClassIcon";
                 }
-            }
-            else if (target.NodeClass == NodeClass.Method)
-            {
+            } else if (target.NodeClass == NodeClass.Method) {
                 return "Method_636";
-            }
-            else
-            {
+            } else {
                 return "ClassIcon";
             }
         }
 
-        private void FormBrowseServer_FormClosing(object sender, FormClosingEventArgs e)
-        {
+        private void FormBrowseServer_FormClosing(object sender, FormClosingEventArgs e) {
             m_OpcUaClient.Disconnect();
         }
 
@@ -136,27 +107,24 @@ namespace OpcUaHelper.Forms
         /// <summary>
         /// 初始化
         /// </summary>
-        private void OpcUaClientInitialization()
-        {
+        private void OpcUaClientInitialization() {
             m_OpcUaClient = new OpcUaClient();
-            m_OpcUaClient.OpcStatusChange += M_OpcUaClient_OpcStatusChange1; ;
+            m_OpcUaClient.OpcStatusChange += M_OpcUaClient_OpcStatusChange1;
+            ;
             m_OpcUaClient.ConnectComplete += M_OpcUaClient_ConnectComplete;
         }
+
         /// <summary>
         /// 连接服务器结束后马上浏览根节点
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void M_OpcUaClient_ConnectComplete(object sender, EventArgs e)
-        {
-            try
-            {
+        private void M_OpcUaClient_ConnectComplete(object sender, EventArgs e) {
+            try {
                 // populate the browse view.
                 PopulateBranch(ObjectIds.ObjectsFolder, BrowseNodesTV.Nodes);
                 BrowseNodesTV.Enabled = true;
-            }
-            catch (Exception exception)
-            {
+            } catch (Exception exception) {
                 ClientUtils.HandleException(Text, exception);
             }
         }
@@ -166,23 +134,15 @@ namespace OpcUaHelper.Forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void M_OpcUaClient_OpcStatusChange1(object sender, OpcUaStatusEventArgs e)
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(() =>
-                {
-                    M_OpcUaClient_OpcStatusChange1(sender, e);
-                }));
+        private void M_OpcUaClient_OpcStatusChange1(object sender, OpcUaStatusEventArgs e) {
+            if (InvokeRequired) {
+                BeginInvoke(new Action(() => { M_OpcUaClient_OpcStatusChange1(sender, e); }));
                 return;
             }
 
-            if (e.Error)
-            {
+            if (e.Error) {
                 toolStripStatusLabel1.BackColor = Color.Red;
-            }
-            else
-            {
+            } else {
                 toolStripStatusLabel1.BackColor = SystemColors.Control;
             }
 
@@ -190,9 +150,9 @@ namespace OpcUaHelper.Forms
         }
 
 
-        private ReferenceDescriptionCollection GetReferenceDescriptionCollection(NodeId sourceId)
-        {
-            TaskCompletionSource<ReferenceDescriptionCollection> task = new TaskCompletionSource<ReferenceDescriptionCollection>();
+        private ReferenceDescriptionCollection GetReferenceDescriptionCollection(NodeId sourceId) {
+            TaskCompletionSource<ReferenceDescriptionCollection> task =
+                new TaskCompletionSource<ReferenceDescriptionCollection>();
 
             // find all of the components of the node.
             BrowseDescription nodeToBrowse1 = new BrowseDescription();
@@ -201,8 +161,10 @@ namespace OpcUaHelper.Forms
             nodeToBrowse1.BrowseDirection = BrowseDirection.Forward;
             nodeToBrowse1.ReferenceTypeId = ReferenceTypeIds.Aggregates;
             nodeToBrowse1.IncludeSubtypes = true;
-            nodeToBrowse1.NodeClassMask = (uint)(NodeClass.Object | NodeClass.Variable | NodeClass.Method | NodeClass.ReferenceType | NodeClass.ObjectType | NodeClass.View | NodeClass.VariableType | NodeClass.DataType);
-            nodeToBrowse1.ResultMask = (uint)BrowseResultMask.All;
+            nodeToBrowse1.NodeClassMask = (uint) (NodeClass.Object | NodeClass.Variable | NodeClass.Method |
+                                                  NodeClass.ReferenceType | NodeClass.ObjectType | NodeClass.View |
+                                                  NodeClass.VariableType | NodeClass.DataType);
+            nodeToBrowse1.ResultMask = (uint) BrowseResultMask.All;
 
             // find all nodes organized by the node.
             BrowseDescription nodeToBrowse2 = new BrowseDescription();
@@ -211,8 +173,10 @@ namespace OpcUaHelper.Forms
             nodeToBrowse2.BrowseDirection = BrowseDirection.Forward;
             nodeToBrowse2.ReferenceTypeId = ReferenceTypeIds.Organizes;
             nodeToBrowse2.IncludeSubtypes = true;
-            nodeToBrowse2.NodeClassMask = (uint)(NodeClass.Object | NodeClass.Variable | NodeClass.Method | NodeClass.View | NodeClass.ReferenceType | NodeClass.ObjectType | NodeClass.VariableType | NodeClass.DataType);
-            nodeToBrowse2.ResultMask = (uint)BrowseResultMask.All;
+            nodeToBrowse2.NodeClassMask = (uint) (NodeClass.Object | NodeClass.Variable | NodeClass.Method |
+                                                  NodeClass.View | NodeClass.ReferenceType | NodeClass.ObjectType |
+                                                  NodeClass.VariableType | NodeClass.DataType);
+            nodeToBrowse2.ResultMask = (uint) BrowseResultMask.All;
 
             BrowseDescriptionCollection nodesToBrowse = new BrowseDescriptionCollection();
             nodesToBrowse.Add(nodeToBrowse1);
@@ -228,34 +192,27 @@ namespace OpcUaHelper.Forms
         /// </summary>
         /// <param name="nodeIds"></param>
         /// <returns></returns>
-        private DataValue[] ReadOneNodeFiveAttributes(List<NodeId> nodeIds)
-        {
+        private DataValue[] ReadOneNodeFiveAttributes(List<NodeId> nodeIds) {
             ReadValueIdCollection nodesToRead = new ReadValueIdCollection();
-            foreach (var nodeId in nodeIds)
-            {
+            foreach (var nodeId in nodeIds) {
                 NodeId sourceId = nodeId;
-                nodesToRead.Add(new ReadValueId()
-                {
+                nodesToRead.Add(new ReadValueId() {
                     NodeId = sourceId,
                     AttributeId = Attributes.NodeClass
                 });
-                nodesToRead.Add(new ReadValueId()
-                {
+                nodesToRead.Add(new ReadValueId() {
                     NodeId = sourceId,
                     AttributeId = Attributes.Value
                 });
-                nodesToRead.Add(new ReadValueId()
-                {
+                nodesToRead.Add(new ReadValueId() {
                     NodeId = sourceId,
                     AttributeId = Attributes.AccessLevel
                 });
-                nodesToRead.Add(new ReadValueId()
-                {
+                nodesToRead.Add(new ReadValueId() {
                     NodeId = sourceId,
                     AttributeId = Attributes.DisplayName
                 });
-                nodesToRead.Add(new ReadValueId()
-                {
+                nodesToRead.Add(new ReadValueId() {
                     NodeId = sourceId,
                     AttributeId = Attributes.Description
                 });
@@ -283,8 +240,7 @@ namespace OpcUaHelper.Forms
         /// <param name="nodeId"></param>
         /// <param name="attribute"></param>
         /// <returns></returns>
-        private DataValue ReadNoteDataValueAttributes(NodeId nodeId, uint attribute)
-        {
+        private DataValue ReadNoteDataValueAttributes(NodeId nodeId, uint attribute) {
             NodeId sourceId = nodeId;
             ReadValueIdCollection nodesToRead = new ReadValueIdCollection();
 
@@ -304,7 +260,7 @@ namespace OpcUaHelper.Forms
             nodeToBrowse1.ReferenceTypeId = ReferenceTypeIds.HasProperty;
             nodeToBrowse1.IncludeSubtypes = true;
             nodeToBrowse1.NodeClassMask = 0;
-            nodeToBrowse1.ResultMask = (uint)BrowseResultMask.All;
+            nodeToBrowse1.ResultMask = (uint) BrowseResultMask.All;
 
             BrowseDescriptionCollection nodesToBrowse = new BrowseDescriptionCollection();
             nodesToBrowse.Add(nodeToBrowse1);
@@ -312,21 +268,18 @@ namespace OpcUaHelper.Forms
             // fetch property references from the server.
             ReferenceDescriptionCollection references = FormUtils.Browse(m_OpcUaClient.Session, nodesToBrowse, false);
 
-            if (references == null)
-            {
+            if (references == null) {
                 return null;
             }
 
-            for (int ii = 0; ii < references.Count; ii++)
-            {
+            for (int ii = 0; ii < references.Count; ii++) {
                 // ignore external references.
-                if (references[ii].NodeId.IsAbsolute)
-                {
+                if (references[ii].NodeId.IsAbsolute) {
                     continue;
                 }
 
                 ReadValueId nodeToRead2 = new ReadValueId();
-                nodeToRead2.NodeId = (NodeId)references[ii].NodeId;
+                nodeToRead2.NodeId = (NodeId) references[ii].NodeId;
                 nodeToRead2.AttributeId = Attributes.Value;
                 nodesToRead.Add(nodeToRead2);
             }
@@ -353,43 +306,32 @@ namespace OpcUaHelper.Forms
 
         #region Menu Click Event
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) {
             // press exit menu button
             Close();
         }
 
-        private void discoverToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+        private void discoverToolStripMenuItem_Click(object sender, EventArgs e) {
             string endpointUrl = new DiscoverServerDlg().ShowDialog(m_OpcUaClient.AppConfig, null);
 
-            if (endpointUrl != null)
-            {
+            if (endpointUrl != null) {
                 textBox1.Text = endpointUrl;
             }
         }
-
-
 
         #endregion
 
         #region Press Connect Click Button
 
-        private async void button1_Click( object sender, EventArgs e )
-        {
+        private async void button1_Click(object sender, EventArgs e) {
             // connect to server
-            using (FormConnectSelect formConnectSelect = new FormConnectSelect( m_OpcUaClient ))
-            {
-                if (formConnectSelect.ShowDialog( ) == DialogResult.OK)
-                {
-                    try
-                    {
-                        await m_OpcUaClient.ConnectServer( textBox1.Text );
+            using (FormConnectSelect formConnectSelect = new FormConnectSelect(m_OpcUaClient)) {
+                if (formConnectSelect.ShowDialog() == DialogResult.OK) {
+                    try {
+                        await m_OpcUaClient.ConnectServer(textBox1.Text);
                         button1.BackColor = Color.LimeGreen;
-                    }
-                    catch (Exception ex)
-                    {
-                        ClientUtils.HandleException( Text, ex );
+                    } catch (Exception ex) {
+                        ClientUtils.HandleException(Text, ex);
                     }
                 }
             }
@@ -398,99 +340,80 @@ namespace OpcUaHelper.Forms
         #endregion
 
         #region 填入分支
-        
+
         /// <summary>
         /// Populates the branch in the tree view.
         /// </summary>
         /// <param name="sourceId">The NodeId of the Node to browse.</param>
         /// <param name="nodes">The node collect to populate.</param>
-        private async void PopulateBranch(NodeId sourceId, TreeNodeCollection nodes)
-        {
+        private async void PopulateBranch(NodeId sourceId, TreeNodeCollection nodes) {
             nodes.Clear();
             nodes.Add(new TreeNode("Browsering...", 7, 7));
             // fetch references from the server.
-            TreeNode[] listNode = await Task.Run(() =>
-             {
-                 ReferenceDescriptionCollection references = GetReferenceDescriptionCollection(sourceId);
-                 List<TreeNode> list = new List<TreeNode>();
-                 if (references != null)
-                 {
-                     // process results.
-                     for (int ii = 0; ii < references.Count; ii++)
-                     {
-                         ReferenceDescription target = references[ii];
-                         TreeNode child = new TreeNode(Utils.Format("{0}", target));
+            TreeNode[] listNode = await Task.Run(() => {
+                ReferenceDescriptionCollection references = GetReferenceDescriptionCollection(sourceId);
+                List<TreeNode> list = new List<TreeNode>();
+                if (references != null) {
+                    // process results.
+                    for (int ii = 0; ii < references.Count; ii++) {
+                        ReferenceDescription target = references[ii];
+                        TreeNode child = new TreeNode(Utils.Format("{0}", target));
 
-                         child.Tag = target;
-                         string key = GetImageKeyFromDescription(target, sourceId);
-                         child.ImageKey = key;
-                         child.SelectedImageKey = key;
+                        child.Tag = target;
+                        string key = GetImageKeyFromDescription(target, sourceId);
+                        child.ImageKey = key;
+                        child.SelectedImageKey = key;
 
-                         // if (target.NodeClass == NodeClass.Object || target.NodeClass == NodeClass.Unspecified || expanded)
-                         // {
-                         //     child.Nodes.Add(new TreeNode());
-                         // }
+                        // if (target.NodeClass == NodeClass.Object || target.NodeClass == NodeClass.Unspecified || expanded)
+                        // {
+                        //     child.Nodes.Add(new TreeNode());
+                        // }
 
-                         if (!checkBox1.Checked)
-                         {
-                             if (GetReferenceDescriptionCollection( (NodeId)target.NodeId ).Count > 0)
-                             {
-                                child.Nodes.Add( new TreeNode( ) );
-                             }
-                         }
-                         else
-                         {
-                             child.Nodes.Add( new TreeNode( ) );
-                         }
-                         
+                        if (!checkBox1.Checked) {
+                            if (GetReferenceDescriptionCollection((NodeId) target.NodeId).Count > 0) {
+                                child.Nodes.Add(new TreeNode());
+                            }
+                        } else {
+                            child.Nodes.Add(new TreeNode());
+                        }
 
-                         list.Add(child);
-                     }
-                 }
 
-                 return list.ToArray();
-             });
+                        list.Add(child);
+                    }
+                }
 
-            
+                return list.ToArray();
+            });
+
+
             // update the attributes display.
             // DisplayAttributes(sourceId);
             nodes.Clear();
             nodes.AddRange(listNode.ToArray());
         }
-    
-
 
         #endregion
 
         #region 节点打开的时候操作
 
-        private void BrowseNodesTV_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
+        private void BrowseNodesTV_MouseClick(object sender, MouseEventArgs e) {
+            if (e.Button == MouseButtons.Right) {
                 TreeNode tn = BrowseNodesTV.GetNodeAt(e.X, e.Y);
-                if (tn != null)
-                {
+                if (tn != null) {
                     BrowseNodesTV.SelectedNode = tn;
                 }
             }
         }
 
-        private void BrowseNodesTV_BeforeExpand(object sender, TreeViewCancelEventArgs e)
-        {
-            try
-            {
-
+        private void BrowseNodesTV_BeforeExpand(object sender, TreeViewCancelEventArgs e) {
+            try {
                 // check if node has already been expanded once.
-                if (e.Node.Nodes.Count != 1)
-                {
+                if (e.Node.Nodes.Count != 1) {
                     return;
                 }
 
-                if (e.Node.Nodes.Count > 0)
-                {
-                    if (e.Node.Nodes[0].Text != String.Empty)
-                    {
+                if (e.Node.Nodes.Count > 0) {
+                    if (e.Node.Nodes[0].Text != String.Empty) {
                         return;
                     }
                 }
@@ -498,52 +421,40 @@ namespace OpcUaHelper.Forms
                 // get the source for the node.
                 ReferenceDescription reference = e.Node.Tag as ReferenceDescription;
 
-                if (reference == null || reference.NodeId.IsAbsolute)
-                {
+                if (reference == null || reference.NodeId.IsAbsolute) {
                     e.Cancel = true;
                     return;
                 }
 
                 // populate children.
-                PopulateBranch((NodeId)reference.NodeId, e.Node.Nodes);
-            }
-            catch (Exception exception)
-            {
+                PopulateBranch((NodeId) reference.NodeId, e.Node.Nodes);
+            } catch (Exception exception) {
                 ClientUtils.HandleException(this.Text, exception);
             }
         }
 
 
-
-        private void BrowseNodesTV_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            try
-            {
-                RemoveAllSubscript( );
+        private void BrowseNodesTV_AfterSelect(object sender, TreeViewEventArgs e) {
+            try {
+                RemoveAllSubscript();
                 // get the source for the node.
                 ReferenceDescription reference = e.Node.Tag as ReferenceDescription;
 
-                if (reference == null || reference.NodeId.IsAbsolute)
-                {
+                if (reference == null || reference.NodeId.IsAbsolute) {
                     return;
                 }
 
                 // populate children.
-                ShowMember((NodeId)reference.NodeId);
-            }
-            catch (Exception exception)
-            {
+                ShowMember((NodeId) reference.NodeId);
+            } catch (Exception exception) {
                 ClientUtils.HandleException(Text, exception);
             }
         }
 
 
-        private void ClearDataGridViewRows(int index)
-        {
-            for (int i = dataGridView1.Rows.Count - 1; i >= index; i--)
-            {
-                if (i >= 0)
-                {
+        private void ClearDataGridViewRows(int index) {
+            for (int i = dataGridView1.Rows.Count - 1; i >= index; i--) {
+                if (i >= 0) {
                     dataGridView1.Rows.RemoveAt(i);
                 }
             }
@@ -558,192 +469,145 @@ namespace OpcUaHelper.Forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void label2_Click(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(textBox_nodeId.Text))
-            {
+        private void label2_Click(object sender, EventArgs e) {
+            if (!string.IsNullOrEmpty(textBox_nodeId.Text)) {
                 Clipboard.SetText(textBox_nodeId.Text);
             }
         }
-        private async void ShowMember(NodeId sourceId)
-        {
 
+        private async void ShowMember(NodeId sourceId) {
             textBox_nodeId.Text = sourceId.ToString();
 
             // dataGridView1.Rows.Clear();
             int index = 0;
             ReferenceDescriptionCollection references;
-            try
-            {
-                references = await Task.Run(() =>
-                 {
-                     return GetReferenceDescriptionCollection(sourceId);
-                 });
-            }
-            catch(Exception exception)
-            {
+            try {
+                references = await Task.Run(() => { return GetReferenceDescriptionCollection(sourceId); });
+            } catch (Exception exception) {
                 ClientUtils.HandleException(Text, exception);
                 return;
             }
 
 
-            if (references?.Count > 0)
-            {
+            if (references?.Count > 0) {
                 // 获取所有要读取的子节点
                 List<NodeId> nodeIds = new List<NodeId>();
-                for (int ii = 0; ii < references.Count; ii++)
-                {
+                for (int ii = 0; ii < references.Count; ii++) {
                     ReferenceDescription target = references[ii];
-                    nodeIds.Add((NodeId)target.NodeId);
+                    nodeIds.Add((NodeId) target.NodeId);
                 }
 
                 DateTime dateTimeStart = DateTime.Now;
 
                 // 获取所有的值
-                DataValue[] dataValues = await Task.Run(() =>
-                {
-                  return ReadOneNodeFiveAttributes(nodeIds);
-                });
-                
-                label_time_spend.Text = (int)(DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
-                
+                DataValue[] dataValues = await Task.Run(() => { return ReadOneNodeFiveAttributes(nodeIds); });
+
+                label_time_spend.Text = (int) (DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
+
                 // 显示
-                for (int jj = 0; jj < dataValues.Length; jj += 5)
-                {
+                for (int jj = 0; jj < dataValues.Length; jj += 5) {
                     AddDataGridViewNewRow(dataValues, jj, index++, nodeIds[jj / 5]);
                 }
-                
-            }
-            else
-            {
+            } else {
                 // 子节点没有数据的情况
-                try
-                {
+                try {
                     DateTime dateTimeStart = DateTime.Now;
                     DataValue dataValue = m_OpcUaClient.ReadNode(sourceId);
 
-                    if (dataValue.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension)
-                    {
+                    if (dataValue.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension) {
                         // 数组显示
                         AddDataGridViewArrayRow(sourceId, out index);
-                    }
-                    else
-                    {
+                    } else {
                         // 显示单个数本身
-                        label_time_spend.Text = (int)(DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
-                        AddDataGridViewNewRow(ReadOneNodeFiveAttributes(new List<NodeId>() { sourceId }), 0, index++, sourceId);
+                        label_time_spend.Text = (int) (DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
+                        AddDataGridViewNewRow(ReadOneNodeFiveAttributes(new List<NodeId>() {sourceId}), 0, index++,
+                            sourceId);
                     }
-                }
-                catch (Exception exception)
-                {
+                } catch (Exception exception) {
                     ClientUtils.HandleException(Text, exception);
                     return;
                 }
             }
 
             ClearDataGridViewRows(index);
-
         }
 
 
-        private void AddDataGridViewNewRow(DataValue[] dataValues, int startIndex, int index, NodeId nodeId)
-        {
+        private void AddDataGridViewNewRow(DataValue[] dataValues, int startIndex, int index, NodeId nodeId) {
             // int index = dataGridView1.Rows.Add();
-            while (index >= dataGridView1.Rows.Count)
-            {
+            while (index >= dataGridView1.Rows.Count) {
                 dataGridView1.Rows.Add();
             }
+
             DataGridViewRow dgvr = dataGridView1.Rows[index];
             dgvr.Tag = nodeId;
 
             if (dataValues[startIndex].WrappedValue.Value == null) return;
-            NodeClass nodeclass = (NodeClass)dataValues[startIndex].WrappedValue.Value;
+            NodeClass nodeclass = (NodeClass) dataValues[startIndex].WrappedValue.Value;
 
             dgvr.Cells[1].Value = dataValues[3 + startIndex].WrappedValue.Value;
             dgvr.Cells[5].Value = dataValues[4 + startIndex].WrappedValue.Value;
             dgvr.Cells[4].Value = GetDiscriptionFromAccessLevel(dataValues[2 + startIndex]);
 
-            if (nodeclass == NodeClass.Object)
-            {
+            if (nodeclass == NodeClass.Object) {
                 dgvr.Cells[0].Value = Properties.Resources.ClassIcon;
                 dgvr.Cells[2].Value = "";
                 dgvr.Cells[3].Value = nodeclass.ToString();
-            }
-            else if (nodeclass == NodeClass.Method)
-            {
+            } else if (nodeclass == NodeClass.Method) {
                 dgvr.Cells[0].Value = Properties.Resources.Method_636;
                 dgvr.Cells[2].Value = "";
                 dgvr.Cells[3].Value = nodeclass.ToString();
-            }
-            else if (nodeclass == NodeClass.Variable)
-            {
+            } else if (nodeclass == NodeClass.Variable) {
                 DataValue dataValue = dataValues[1 + startIndex];
 
-                if (dataValue.WrappedValue.TypeInfo != null)
-                {
+                if (dataValue.WrappedValue.TypeInfo != null) {
                     dgvr.Cells[3].Value = dataValue.WrappedValue.TypeInfo.BuiltInType;
                     // dgvr.Cells[3].Value = dataValue.Value.GetType().ToString();
-                    if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.Scalar)
-                    {
+                    if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.Scalar) {
                         dgvr.Cells[2].Value = dataValue.WrappedValue.Value;
                         dgvr.Cells[0].Value = Properties.Resources.Enum_582;
-                    }
-                    else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.OneDimension)
-                    {
+                    } else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.OneDimension) {
                         dgvr.Cells[2].Value = dataValue.Value.GetType().ToString();
                         dgvr.Cells[0].Value = Properties.Resources.brackets_Square_16xMD;
-                    }
-                    else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.TwoDimensions)
-                    {
+                    } else if (dataValue.WrappedValue.TypeInfo.ValueRank == ValueRanks.TwoDimensions) {
                         dgvr.Cells[2].Value = dataValue.Value.GetType().ToString();
                         dgvr.Cells[0].Value = Properties.Resources.Module_648;
-                    }
-                    else
-                    {
+                    } else {
                         dgvr.Cells[2].Value = dataValue.Value.GetType().ToString();
                         dgvr.Cells[0].Value = Properties.Resources.ClassIcon;
                     }
-                }
-                else
-                {
+                } else {
                     dgvr.Cells[0].Value = Properties.Resources.ClassIcon;
                     dgvr.Cells[2].Value = dataValue.Value;
                     dgvr.Cells[3].Value = "null";
                 }
-            }
-            else
-            {
+            } else {
                 dgvr.Cells[2].Value = "";
                 dgvr.Cells[0].Value = Properties.Resources.ClassIcon;
                 dgvr.Cells[3].Value = nodeclass.ToString();
             }
         }
 
-        private void AddDataGridViewArrayRow(NodeId nodeId,out int index)
-        {
-            
+        private void AddDataGridViewArrayRow(NodeId nodeId, out int index) {
             DateTime dateTimeStart = DateTime.Now;
-            DataValue[] dataValues = ReadOneNodeFiveAttributes(new List<NodeId>() { nodeId });
-            label_time_spend.Text = (int)(DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
+            DataValue[] dataValues = ReadOneNodeFiveAttributes(new List<NodeId>() {nodeId});
+            label_time_spend.Text = (int) (DateTime.Now - dateTimeStart).TotalMilliseconds + " ms";
 
             DataValue dataValue = dataValues[1];
 
-            if (dataValue.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension)
-            {
-                string access= GetDiscriptionFromAccessLevel(dataValues[2]);
+            if (dataValue.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension) {
+                string access = GetDiscriptionFromAccessLevel(dataValues[2]);
                 BuiltInType type = dataValue.WrappedValue.TypeInfo.BuiltInType;
                 object des = dataValues[4].Value ?? "";
                 object dis = dataValues[3].Value ?? type;
 
                 Array array = dataValue.Value as Array;
                 int i = 0;
-                foreach(object obj in array)
-                {
-                    while (i >= dataGridView1.Rows.Count)
-                    {
+                foreach (object obj in array) {
+                    while (i >= dataGridView1.Rows.Count) {
                         dataGridView1.Rows.Add();
                     }
-                    
+
                     DataGridViewRow dgvr = dataGridView1.Rows[i];
 
                     dgvr.Tag = null;
@@ -755,20 +619,16 @@ namespace OpcUaHelper.Forms
                     dgvr.Cells[4].Value = access;
                     dgvr.Cells[5].Value = des;
                 }
+
                 index = i;
-            }
-            else
-            {
+            } else {
                 index = 0;
             }
         }
 
-        private string GetDiscriptionFromAccessLevel(DataValue value)
-        {
-            if (value.WrappedValue.Value != null)
-            {
-                switch ((byte)value.WrappedValue.Value)
-                {
+        private string GetDiscriptionFromAccessLevel(DataValue value) {
+            if (value.WrappedValue.Value != null) {
+                switch ((byte) value.WrappedValue.Value) {
                     case 0: return "None";
                     case 1: return "CurrentRead";
                     case 2: return "CurrentWrite";
@@ -781,118 +641,91 @@ namespace OpcUaHelper.Forms
                     case 64: return "TimestampWrite";
                     default: return "None";
                 }
-            }
-            else
-            {
+            } else {
                 return "null";
             }
         }
-
-
 
         #endregion
 
         #region 订阅刷新块
 
-
-        private List<string> subNodeIds = new List<string>( );
+        private List<string> subNodeIds = new List<string>();
         private bool isSingleValueSub = false;
 
-        private void RemoveAllSubscript( )
-        {
-            m_OpcUaClient?.RemoveAllSubscription( );
+        private void RemoveAllSubscript() {
+            m_OpcUaClient?.RemoveAllSubscription();
         }
 
 
-        private void SubCallBack( string key, MonitoredItem monitoredItem, MonitoredItemNotificationEventArgs eventArgs )
-        {
-            if (InvokeRequired)
-            {
-                Invoke( new Action<string, MonitoredItem, MonitoredItemNotificationEventArgs>( SubCallBack ), key, monitoredItem, eventArgs );
+        private void SubCallBack(string key, MonitoredItem monitoredItem,
+            MonitoredItemNotificationEventArgs eventArgs) {
+            if (InvokeRequired) {
+                Invoke(new Action<string, MonitoredItem, MonitoredItemNotificationEventArgs>(SubCallBack), key,
+                    monitoredItem, eventArgs);
                 return;
             }
 
 
             MonitoredItemNotification notification = eventArgs.NotificationValue as MonitoredItemNotification;
-            string nodeId = monitoredItem.StartNodeId.ToString( );
+            string nodeId = monitoredItem.StartNodeId.ToString();
 
-            int index = subNodeIds.IndexOf( nodeId );
-            if (index >= 0)
-            {
-                if (isSingleValueSub)
-                {
-                    if (notification.Value.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension)
-                    {
+            int index = subNodeIds.IndexOf(nodeId);
+            if (index >= 0) {
+                if (isSingleValueSub) {
+                    if (notification.Value.WrappedValue.TypeInfo?.ValueRank == ValueRanks.OneDimension) {
                         Array array = notification.Value.WrappedValue.Value as Array;
                         int i = 0;
-                        foreach (object obj in array)
-                        {
+                        foreach (object obj in array) {
                             DataGridViewRow dgvr = dataGridView1.Rows[i];
                             dgvr.Cells[2].Value = obj;
                             i++;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         dataGridView1.Rows[index].Cells[2].Value = notification.Value.WrappedValue.Value;
                     }
-                }
-                else
-                {
+                } else {
                     dataGridView1.Rows[index].Cells[2].Value = notification.Value.WrappedValue.Value;
                 }
             }
         }
 
 
-        private async void button2_Click(object sender, EventArgs e)
-        {
-            if (m_OpcUaClient != null)
-            {
-                RemoveAllSubscript( );
-                if (button2.BackColor != Color.LimeGreen)
-                {
+        private async void button2_Click(object sender, EventArgs e) {
+            if (m_OpcUaClient != null) {
+                RemoveAllSubscript();
+                if (button2.BackColor != Color.LimeGreen) {
                     button2.BackColor = Color.LimeGreen;
                     // 判断当前的选择
-                    if (string.IsNullOrEmpty( textBox_nodeId.Text )) return;
+                    if (string.IsNullOrEmpty(textBox_nodeId.Text)) return;
 
-                    
+
                     ReferenceDescriptionCollection references;
-                    try
-                    {
-                        references = await Task.Run( ( ) =>
-                        {
-                            return GetReferenceDescriptionCollection( new NodeId( textBox_nodeId.Text ) );
-                        } );
-                    }
-                    catch (Exception exception)
-                    {
-                        ClientUtils.HandleException( Text, exception );
+                    try {
+                        references = await Task.Run(() => {
+                            return GetReferenceDescriptionCollection(new NodeId(textBox_nodeId.Text));
+                        });
+                    } catch (Exception exception) {
+                        ClientUtils.HandleException(Text, exception);
                         return;
                     }
 
-                    subNodeIds = new List<string>( );
-                    if (references?.Count > 0)
-                    {
+                    subNodeIds = new List<string>();
+                    if (references?.Count > 0) {
                         isSingleValueSub = false;
                         // 获取所有要订阅的子节点
-                        for (int ii = 0; ii < references.Count; ii++)
-                        {
+                        for (int ii = 0; ii < references.Count; ii++) {
                             ReferenceDescription target = references[ii];
-                            subNodeIds.Add( ((NodeId)target.NodeId).ToString( ) );
+                            subNodeIds.Add(((NodeId) target.NodeId).ToString());
                         }
-                    }
-                    else
-                    {
+                    } else {
                         isSingleValueSub = true;
                         // 子节点没有数据的情况
-                        subNodeIds.Add( textBox_nodeId.Text );
+                        subNodeIds.Add(textBox_nodeId.Text);
                     }
 
-                    m_OpcUaClient.AddSubscription( "subTest", subNodeIds.ToArray( ), SubCallBack );
-                }
-                else
-                {
+                    m_OpcUaClient.AddSubscription("subTest", subNodeIds.ToArray(), SubCallBack);
+                } else {
                     button2.BackColor = SystemColors.Control;
                 }
             }
@@ -902,57 +735,42 @@ namespace OpcUaHelper.Forms
 
         #region 点击了表格修改数据
 
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 1].Value is BuiltInType builtInType)
-            {
+        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e) {
+            if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 1].Value is BuiltInType builtInType) {
                 dynamic value = null;
-                if (dataGridView1.Rows[e.RowIndex].Tag is NodeId nodeId)
-                {
+                if (dataGridView1.Rows[e.RowIndex].Tag is NodeId nodeId) {
                     // 节点
-                    try
-                    {
-                        value = GetValueFromString(dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(), builtInType);
-                    }
-                    catch
-                    {
+                    try {
+                        value = GetValueFromString(dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(),
+                            builtInType);
+                    } catch {
                         MessageBox.Show("Invalid Input Value");
                         return;
                     }
 
-                    if (!m_OpcUaClient.WriteNode(nodeId.ToString(), value))
-                    {
+                    if (!m_OpcUaClient.WriteNode(nodeId.ToString(), value)) {
                         MessageBox.Show("Failed to write value");
                     }
-                }
-                else
-                {
+                } else {
                     // 点击了数组修改
                     IList<string> list = new List<string>();
 
-                    for (int jj = 0; jj < dataGridView1.RowCount; jj++)
-                    {
+                    for (int jj = 0; jj < dataGridView1.RowCount; jj++) {
                         list.Add(dataGridView1.Rows[jj].Cells[e.ColumnIndex].Value.ToString());
                     }
-                    
-                    try
-                    {
+
+                    try {
                         value = GetArrayValueFromString(list, builtInType);
-                    }
-                    catch(Exception ex)
-                    {
+                    } catch (Exception ex) {
                         MessageBox.Show("Invalid Input Value: " + ex.Message);
                         return;
                     }
 
-                    if (!m_OpcUaClient.WriteNode(textBox_nodeId.Text, value))
-                    {
+                    if (!m_OpcUaClient.WriteNode(textBox_nodeId.Text, value)) {
                         MessageBox.Show("Failed to write value");
                     }
                 }
-            }
-            else
-            {
+            } else {
                 MessageBox.Show("Invalid data type");
             }
 
@@ -960,239 +778,199 @@ namespace OpcUaHelper.Forms
             //    "Type:" + dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.GetType().ToString() + Environment.NewLine +
             //    "Value:" + dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString());
         }
-        
-        private dynamic GetValueFromString(string value, BuiltInType builtInType)
-        {
-            switch(builtInType)
-            {
-                case BuiltInType.Boolean:
-                    {
-                        return bool.Parse(value);
-                    }
-                case BuiltInType.Byte:
-                    {
-                        return byte.Parse(value);
-                    }
-                case BuiltInType.DateTime:
-                    {
-                        return DateTime.Parse(value);
-                    }
-                case BuiltInType.Double:
-                    {
-                        return double.Parse(value);
-                    }
-                case BuiltInType.Float:
-                    {
-                        return float.Parse(value);
-                    }
-                case BuiltInType.Guid:
-                    {
-                        return Guid.Parse(value);
-                    }
-                case BuiltInType.Int16:
-                    {
-                        return short.Parse(value);
-                    }
-                case BuiltInType.Int32:
-                    {
-                        return int.Parse(value);
-                    }
-                case BuiltInType.Int64:
-                    {
-                        return long.Parse(value);
-                    }
-                case BuiltInType.Integer:
-                    {
-                        return int.Parse(value);
-                    }
-                case BuiltInType.LocalizedText:
-                    {
-                        return value;
-                    }
-                case BuiltInType.SByte:
-                    {
-                        return sbyte.Parse(value);
-                    }
-                case BuiltInType.String:
-                    {
-                        return value;
-                    }
-                case BuiltInType.UInt16:
-                    {
-                        return ushort.Parse(value);
-                    }
-                case BuiltInType.UInt32:
-                    {
-                        return uint.Parse(value);
-                    }
-                case BuiltInType.UInt64:
-                    {
-                        return ulong.Parse(value);
-                    }
-                case BuiltInType.UInteger:
-                    {
-                        return uint.Parse(value);
-                    }
-                default:throw new Exception("Not supported data type");
-            }
-        }
-        
 
-        private dynamic GetArrayValueFromString(IList<string> values, BuiltInType builtInType)
-        {
-            switch (builtInType)
-            {
-                case BuiltInType.Boolean:
-                    {
-                        bool[] result = new bool[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = bool.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Byte:
-                    {
-                        byte[] result = new byte[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = byte.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.DateTime:
-                    {
-                        DateTime[] result = new DateTime[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = DateTime.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Double:
-                    {
-                        double[] result = new double[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = double.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Float:
-                    {
-                        float[] result = new float[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = float.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Guid:
-                    {
-                        Guid[] result = new Guid[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = Guid.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Int16:
-                    {
-                        short[] result = new short[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = short.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Int32:
-                    {
-                        int[] result = new int[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = int.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Int64:
-                    {
-                        long[] result = new long[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = long.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.Integer:
-                    {
-                        int[] result = new int[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = int.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.LocalizedText:
-                    {
-                        return values.ToArray();
-                    }
-                case BuiltInType.SByte:
-                    {
-                        sbyte[] result = new sbyte[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = sbyte.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.String:
-                    {
-                        return values.ToArray();
-                    }
-                case BuiltInType.UInt16:
-                    {
-                        ushort[] result = new ushort[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = ushort.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.UInt32:
-                    {
-                        uint[] result = new uint[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = uint.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.UInt64:
-                    {
-                        ulong[] result = new ulong[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = ulong.Parse(values[i]);
-                        }
-                        return result;
-                    }
-                case BuiltInType.UInteger:
-                    {
-                        uint[] result = new uint[values.Count];
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            result[i] = uint.Parse(values[i]);
-                        }
-                        return result;
-                    }
+        private dynamic GetValueFromString(string value, BuiltInType builtInType) {
+            switch (builtInType) {
+                case BuiltInType.Boolean: {
+                    return bool.Parse(value);
+                }
+                case BuiltInType.Byte: {
+                    return byte.Parse(value);
+                }
+                case BuiltInType.DateTime: {
+                    return DateTime.Parse(value);
+                }
+                case BuiltInType.Double: {
+                    return double.Parse(value);
+                }
+                case BuiltInType.Float: {
+                    return float.Parse(value);
+                }
+                case BuiltInType.Guid: {
+                    return Guid.Parse(value);
+                }
+                case BuiltInType.Int16: {
+                    return short.Parse(value);
+                }
+                case BuiltInType.Int32: {
+                    return int.Parse(value);
+                }
+                case BuiltInType.Int64: {
+                    return long.Parse(value);
+                }
+                case BuiltInType.Integer: {
+                    return int.Parse(value);
+                }
+                case BuiltInType.LocalizedText: {
+                    return value;
+                }
+                case BuiltInType.SByte: {
+                    return sbyte.Parse(value);
+                }
+                case BuiltInType.String: {
+                    return value;
+                }
+                case BuiltInType.UInt16: {
+                    return ushort.Parse(value);
+                }
+                case BuiltInType.UInt32: {
+                    return uint.Parse(value);
+                }
+                case BuiltInType.UInt64: {
+                    return ulong.Parse(value);
+                }
+                case BuiltInType.UInteger: {
+                    return uint.Parse(value);
+                }
                 default: throw new Exception("Not supported data type");
             }
         }
 
-        private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 1].Value is BuiltInType builtInType)
-            {
+
+        private dynamic GetArrayValueFromString(IList<string> values, BuiltInType builtInType) {
+            switch (builtInType) {
+                case BuiltInType.Boolean: {
+                    bool[] result = new bool[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = bool.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Byte: {
+                    byte[] result = new byte[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = byte.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.DateTime: {
+                    DateTime[] result = new DateTime[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = DateTime.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Double: {
+                    double[] result = new double[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = double.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Float: {
+                    float[] result = new float[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = float.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Guid: {
+                    Guid[] result = new Guid[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = Guid.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Int16: {
+                    short[] result = new short[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = short.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Int32: {
+                    int[] result = new int[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = int.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Int64: {
+                    long[] result = new long[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = long.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.Integer: {
+                    int[] result = new int[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = int.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.LocalizedText: {
+                    return values.ToArray();
+                }
+                case BuiltInType.SByte: {
+                    sbyte[] result = new sbyte[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = sbyte.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.String: {
+                    return values.ToArray();
+                }
+                case BuiltInType.UInt16: {
+                    ushort[] result = new ushort[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = ushort.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.UInt32: {
+                    uint[] result = new uint[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = uint.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.UInt64: {
+                    ulong[] result = new ulong[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = ulong.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                case BuiltInType.UInteger: {
+                    uint[] result = new uint[values.Count];
+                    for (int i = 0; i < values.Count; i++) {
+                        result[i] = uint.Parse(values[i]);
+                    }
+
+                    return result;
+                }
+                default: throw new Exception("Not supported data type");
+            }
+        }
+
+        private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e) {
+            if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 1].Value is BuiltInType builtInType) {
                 if (
                     builtInType == BuiltInType.Boolean ||
                     builtInType == BuiltInType.Byte ||
@@ -1211,33 +989,23 @@ namespace OpcUaHelper.Forms
                     builtInType == BuiltInType.UInt32 ||
                     builtInType == BuiltInType.UInt64 ||
                     builtInType == BuiltInType.UInteger
-                    )
-                {
-
-                }
-                else
-                {
+                ) { } else {
                     e.Cancel = true;
                     MessageBox.Show("Not support the Type of modify value!");
                     return;
                 }
-            }
-            else
-            {
+            } else {
                 e.Cancel = true;
                 MessageBox.Show("Not support the Type of modify value!");
                 return;
             }
 
 
-            if (!dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 2].Value.ToString().Contains("Write"))
-            {
+            if (!dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex + 2].Value.ToString().Contains("Write")) {
                 e.Cancel = true;
                 MessageBox.Show("Not support the access of modify value!");
             }
         }
-
-
 
         #endregion
     }
