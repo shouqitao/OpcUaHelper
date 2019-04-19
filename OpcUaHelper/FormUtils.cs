@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace OpcUaHelper {
+    /// <summary>
+    /// 
+    /// </summary>
     public class FormUtils {
         /// <summary>
         /// Gets the display text for the access level attribute.
@@ -14,7 +17,7 @@ namespace OpcUaHelper {
         /// <param name="accessLevel">The access level.</param>
         /// <returns>The access level formatted as a string.</returns>
         private static string GetAccessLevelDisplayText(byte accessLevel) {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             if (accessLevel == AccessLevels.None) {
                 buffer.Append("None");
@@ -65,7 +68,7 @@ namespace OpcUaHelper {
         /// <param name="accessLevel">The event notifier.</param>
         /// <returns>The event notifier formatted as a string.</returns>
         private static string GetEventNotifierDisplayText(byte eventNotifier) {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             if (eventNotifier == EventNotifiers.None) {
                 buffer.Append("None");
@@ -121,13 +124,13 @@ namespace OpcUaHelper {
         /// <returns>The attribute formatted as a string.</returns>
         public static string GetAttributeDisplayText(Session session, uint attributeId, Variant value) {
             if (value == Variant.Null) {
-                return String.Empty;
+                return string.Empty;
             }
 
             switch (attributeId) {
                 case Attributes.AccessLevel:
                 case Attributes.UserAccessLevel: {
-                    byte? field = value.Value as byte?;
+                    var field = value.Value as byte?;
 
                     if (field != null) {
                         return GetAccessLevelDisplayText(field.Value);
@@ -137,7 +140,7 @@ namespace OpcUaHelper {
                 }
 
                 case Attributes.EventNotifier: {
-                    byte? field = value.Value as byte?;
+                    var field = value.Value as byte?;
 
                     if (field != null) {
                         return GetEventNotifierDisplayText(field.Value);
@@ -151,7 +154,7 @@ namespace OpcUaHelper {
                 }
 
                 case Attributes.ValueRank: {
-                    int? field = value.Value as int?;
+                    var field = value.Value as int?;
 
                     if (field != null) {
                         return GetValueRankDisplayText(field.Value);
@@ -161,7 +164,7 @@ namespace OpcUaHelper {
                 }
 
                 case Attributes.NodeClass: {
-                    int? field = value.Value as int?;
+                    var field = value.Value as int?;
 
                     if (field != null) {
                         return ((NodeClass) field.Value).ToString();
@@ -171,7 +174,7 @@ namespace OpcUaHelper {
                 }
 
                 case Attributes.NodeId: {
-                    NodeId field = value.Value as NodeId;
+                    var field = value.Value as NodeId;
 
                     if (!NodeId.IsNull(field)) {
                         return field.ToString();
@@ -196,24 +199,24 @@ namespace OpcUaHelper {
         /// <param name="configuration">The configuration.</param>
         /// <returns>A list of server urls.</returns>
         public static IList<string> DiscoverServers(ApplicationConfiguration configuration) {
-            List<string> serverUrls = new List<string>();
+            var serverUrls = new List<string>();
 
             // set a short timeout because this is happening in the drop down event.
-            EndpointConfiguration endpointConfiguration = EndpointConfiguration.Create(configuration);
+            var endpointConfiguration = EndpointConfiguration.Create(configuration);
             endpointConfiguration.OperationTimeout = 5000;
 
             // Connect to the local discovery server and find the available servers.
-            using (DiscoveryClient client =
+            using (var client =
                 DiscoveryClient.Create(new Uri("opc.tcp://localhost:4840"), endpointConfiguration)) {
-                ApplicationDescriptionCollection servers = client.FindServers(null);
+                var servers = client.FindServers(null);
 
                 // populate the drop down list with the discovery URLs for the available servers.
-                for (int ii = 0; ii < servers.Count; ii++) {
+                for (var ii = 0; ii < servers.Count; ii++) {
                     if (servers[ii].ApplicationType == ApplicationType.DiscoveryServer) {
                         continue;
                     }
 
-                    for (int jj = 0; jj < servers[ii].DiscoveryUrls.Count; jj++) {
+                    for (var jj = 0; jj < servers[ii].DiscoveryUrls.Count; jj++) {
                         string discoveryUrl = servers[ii].DiscoveryUrls[jj];
 
                         // Many servers will use the '/discovery' suffix for the discovery endpoint.
@@ -248,21 +251,21 @@ namespace OpcUaHelper {
             }
 
             // parse the selected URL.
-            Uri uri = new Uri(discoveryUrl);
+            var uri = new Uri(discoveryUrl);
 
             // set a short timeout because this is happening in the drop down event.
-            EndpointConfiguration configuration = EndpointConfiguration.Create();
+            var configuration = EndpointConfiguration.Create();
             configuration.OperationTimeout = 5000;
 
             EndpointDescription selectedEndpoint = null;
 
             // Connect to the server's discovery endpoint and find the available configuration.
-            using (DiscoveryClient client = DiscoveryClient.Create(uri, configuration)) {
-                EndpointDescriptionCollection endpoints = client.GetEndpoints(null);
+            using (var client = DiscoveryClient.Create(uri, configuration)) {
+                var endpoints = client.GetEndpoints(null);
 
                 // select the best endpoint to use based on the selected URL and the UseSecurity checkbox. 
-                for (int ii = 0; ii < endpoints.Count; ii++) {
-                    EndpointDescription endpoint = endpoints[ii];
+                for (var ii = 0; ii < endpoints.Count; ii++) {
+                    var endpoint = endpoints[ii];
 
                     // check for a match on the URL scheme.
                     if (endpoint.EndpointUrl.StartsWith(uri.Scheme)) {
@@ -302,10 +305,10 @@ namespace OpcUaHelper {
             // GetEndpoints can be used to access any of the endpoints. This code makes that conversion.
             // Note that the conversion only makes sense if discovery uses the same protocol as the endpoint.
 
-            Uri endpointUrl = Utils.ParseUri(selectedEndpoint.EndpointUrl);
+            var endpointUrl = Utils.ParseUri(selectedEndpoint.EndpointUrl);
 
             if (endpointUrl != null && endpointUrl.Scheme == uri.Scheme) {
-                UriBuilder builder = new UriBuilder(endpointUrl);
+                var builder = new UriBuilder(endpointUrl);
                 builder.Host = uri.DnsSafeHost;
                 builder.Port = uri.Port;
                 selectedEndpoint.EndpointUrl = builder.ToString();
@@ -327,8 +330,8 @@ namespace OpcUaHelper {
         public static ReferenceDescriptionCollection Browse(Session session, BrowseDescriptionCollection nodesToBrowse,
             bool throwOnError) {
             try {
-                ReferenceDescriptionCollection references = new ReferenceDescriptionCollection();
-                BrowseDescriptionCollection unprocessedOperations = new BrowseDescriptionCollection();
+                var references = new ReferenceDescriptionCollection();
+                var unprocessedOperations = new BrowseDescriptionCollection();
 
                 while (nodesToBrowse.Count > 0) {
                     // start the browse operation.
@@ -346,9 +349,9 @@ namespace OpcUaHelper {
                     ClientBase.ValidateResponse(results, nodesToBrowse);
                     ClientBase.ValidateDiagnosticInfos(diagnosticInfos, nodesToBrowse);
 
-                    ByteStringCollection continuationPoints = new ByteStringCollection();
+                    var continuationPoints = new ByteStringCollection();
 
-                    for (int ii = 0; ii < nodesToBrowse.Count; ii++) {
+                    for (var ii = 0; ii < nodesToBrowse.Count; ii++) {
                         // check for error.
                         if (StatusCode.IsBad(results[ii].StatusCode)) {
                             // this error indicates that the server does not have enough simultaneously active 
@@ -376,7 +379,7 @@ namespace OpcUaHelper {
                     }
 
                     // process continuation points.
-                    ByteStringCollection revisedContiuationPoints = new ByteStringCollection();
+                    var revisedContiuationPoints = new ByteStringCollection();
 
                     while (continuationPoints.Count > 0) {
                         // continue browse operation.
@@ -390,7 +393,7 @@ namespace OpcUaHelper {
                         ClientBase.ValidateResponse(results, continuationPoints);
                         ClientBase.ValidateDiagnosticInfos(diagnosticInfos, continuationPoints);
 
-                        for (int ii = 0; ii < continuationPoints.Count; ii++) {
+                        for (var ii = 0; ii < continuationPoints.Count; ii++) {
                             // check for error.
                             if (StatusCode.IsBad(results[ii].StatusCode)) {
                                 continue;
@@ -436,11 +439,11 @@ namespace OpcUaHelper {
         /// <param name="notification">The notification.</param>
         /// <returns>The NodeId of the EventType.</returns>
         public static NodeId FindEventType(MonitoredItem monitoredItem, EventFieldList notification) {
-            EventFilter filter = monitoredItem.Status.Filter as EventFilter;
+            var filter = monitoredItem.Status.Filter as EventFilter;
 
             if (filter != null) {
-                for (int ii = 0; ii < filter.SelectClauses.Count; ii++) {
-                    SimpleAttributeOperand clause = filter.SelectClauses[ii];
+                for (var ii = 0; ii < filter.SelectClauses.Count; ii++) {
+                    var clause = filter.SelectClauses[ii];
 
                     if (clause.BrowsePath.Count == 1 && clause.BrowsePath[0] == BrowseNames.EventType) {
                         return notification.EventFields[ii].Value as NodeId;
@@ -463,23 +466,22 @@ namespace OpcUaHelper {
         public static ReferenceDescriptionCollection Browse(Session session, BrowseDescription nodeToBrowse,
             bool throwOnError) {
             try {
-                ReferenceDescriptionCollection references = new ReferenceDescriptionCollection();
+                var references = new ReferenceDescriptionCollection();
 
                 // construct browse request.
-                BrowseDescriptionCollection nodesToBrowse = new BrowseDescriptionCollection();
-                nodesToBrowse.Add(nodeToBrowse);
+                var nodesToBrowse = new BrowseDescriptionCollection {
+                    nodeToBrowse
+                };
 
                 // start the browse operation.
-                BrowseResultCollection results = null;
-                DiagnosticInfoCollection diagnosticInfos = null;
 
                 session.Browse(
                     null,
                     null,
                     0,
                     nodesToBrowse,
-                    out results,
-                    out diagnosticInfos);
+                    out var results,
+                    out var diagnosticInfos);
 
                 ClientBase.ValidateResponse(results, nodesToBrowse);
                 ClientBase.ValidateDiagnosticInfos(diagnosticInfos, nodesToBrowse);
@@ -491,7 +493,7 @@ namespace OpcUaHelper {
                     }
 
                     // process results.
-                    for (int ii = 0; ii < results[0].References.Count; ii++) {
+                    for (var ii = 0; ii < results[0].References.Count; ii++) {
                         references.Add(results[0].References[ii]);
                     }
 
@@ -501,8 +503,7 @@ namespace OpcUaHelper {
                     }
 
                     // continue browse operation.
-                    ByteStringCollection continuationPoints = new ByteStringCollection();
-                    continuationPoints.Add(results[0].ContinuationPoint);
+                    var continuationPoints = new ByteStringCollection {results[0].ContinuationPoint};
 
                     session.BrowseNext(
                         null,
@@ -537,11 +538,11 @@ namespace OpcUaHelper {
         /// </returns>
         public static ReferenceDescriptionCollection
             BrowseSuperTypes(Session session, NodeId typeId, bool throwOnError) {
-            ReferenceDescriptionCollection supertypes = new ReferenceDescriptionCollection();
+            var supertypes = new ReferenceDescriptionCollection();
 
             try {
                 // find all of the children of the field.
-                BrowseDescription nodeToBrowse = new BrowseDescription();
+                var nodeToBrowse = new BrowseDescription();
 
                 nodeToBrowse.NodeId = typeId;
                 nodeToBrowse.BrowseDirection = BrowseDirection.Inverse;
@@ -550,7 +551,7 @@ namespace OpcUaHelper {
                 nodeToBrowse.NodeClassMask = 0; // the HasSubtype reference already restricts the targets to Types. 
                 nodeToBrowse.ResultMask = (uint) BrowseResultMask.All;
 
-                ReferenceDescriptionCollection references = Browse(session, nodeToBrowse, throwOnError);
+                var references = Browse(session, nodeToBrowse, throwOnError);
 
                 while (references != null && references.Count > 0) {
                     // should never be more than one supertype.
@@ -595,7 +596,7 @@ namespace OpcUaHelper {
             Dictionary<NodeId, Type> knownEventTypes,
             Dictionary<NodeId, NodeId> eventTypeMappings) {
             // find the event type.
-            NodeId eventTypeId = FindEventType(monitoredItem, notification);
+            var eventTypeId = FindEventType(monitoredItem, notification);
 
             if (eventTypeId == null) {
                 return null;
@@ -620,7 +621,7 @@ namespace OpcUaHelper {
             // try mapping it to a known type.
             if (knownType == null) {
                 // browse for the supertypes of the event type.
-                ReferenceDescriptionCollection supertypes = FormUtils.BrowseSuperTypes(session, eventTypeId, false);
+                var supertypes = FormUtils.BrowseSuperTypes(session, eventTypeId, false);
 
                 // can't do anything with unknown types.
                 if (supertypes == null) {
@@ -628,8 +629,8 @@ namespace OpcUaHelper {
                 }
 
                 // find the first supertype that matches a known event type.
-                for (int ii = 0; ii < supertypes.Count; ii++) {
-                    NodeId superTypeId = (NodeId) supertypes[ii].NodeId;
+                for (var ii = 0; ii < supertypes.Count; ii++) {
+                    var superTypeId = (NodeId) supertypes[ii].NodeId;
 
                     if (knownEventTypes.TryGetValue(superTypeId, out knownType)) {
                         knownTypeId = superTypeId;
@@ -648,10 +649,10 @@ namespace OpcUaHelper {
             }
 
             // construct the event based on the known event type.
-            BaseEventState e = (BaseEventState) Activator.CreateInstance(knownType, new object[] {(NodeState) null});
+            var e = (BaseEventState) Activator.CreateInstance(knownType, new object[] {(NodeState) null});
 
             // get the filter which defines the contents of the notification.
-            EventFilter filter = monitoredItem.Status.Filter as EventFilter;
+            var filter = monitoredItem.Status.Filter as EventFilter;
 
             // initialize the event with the values in the notification.
             e.Update(session.SystemContext, filter.SelectClauses, notification);
@@ -676,11 +677,11 @@ namespace OpcUaHelper {
             NamespaceTable namespacesUris,
             params string[] relativePaths) {
             // build the list of browse paths to follow by parsing the relative paths.
-            BrowsePathCollection browsePaths = new BrowsePathCollection();
+            var browsePaths = new BrowsePathCollection();
 
             if (relativePaths != null) {
-                for (int ii = 0; ii < relativePaths.Length; ii++) {
-                    BrowsePath browsePath = new BrowsePath();
+                for (var ii = 0; ii < relativePaths.Length; ii++) {
+                    var browsePath = new BrowsePath();
 
                     // The relative paths used indexes in the namespacesUris table. These must be 
                     // converted to indexes used by the server. An error occurs if the relative path
@@ -705,7 +706,7 @@ namespace OpcUaHelper {
             BrowsePathResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = session.TranslateBrowsePathsToNodeIds(
+            var responseHeader = session.TranslateBrowsePathsToNodeIds(
                 null,
                 browsePaths,
                 out results,
@@ -716,9 +717,9 @@ namespace OpcUaHelper {
             Session.ValidateDiagnosticInfos(diagnosticInfos, browsePaths);
 
             // collect the list of node ids found.
-            List<NodeId> nodes = new List<NodeId>();
+            var nodes = new List<NodeId>();
 
-            for (int ii = 0; ii < results.Count; ii++) {
+            for (var ii = 0; ii < results.Count; ii++) {
                 // check if the start node actually exists.
                 if (StatusCode.IsBad(results[ii].StatusCode)) {
                     nodes.Add(null);
@@ -733,7 +734,7 @@ namespace OpcUaHelper {
 
                 // Multiple matches are possible, however, the node that matches the type model is the
                 // one we are interested in here. The rest can be ignored.
-                BrowsePathTarget target = results[ii].Targets[0];
+                var target = results[ii].Targets[0];
 
                 if (target.RemainingPathIndex != UInt32.MaxValue) {
                     nodes.Add(null);
@@ -759,15 +760,15 @@ namespace OpcUaHelper {
         public static void CollectFieldsForType(Session session, NodeId typeId, SimpleAttributeOperandCollection fields,
             List<NodeId> fieldNodeIds) {
             // get the supertypes.
-            ReferenceDescriptionCollection supertypes = FormUtils.BrowseSuperTypes(session, typeId, false);
+            var supertypes = FormUtils.BrowseSuperTypes(session, typeId, false);
 
             if (supertypes == null) {
                 return;
             }
 
             // process the types starting from the top of the tree.
-            Dictionary<NodeId, QualifiedNameCollection> foundNodes = new Dictionary<NodeId, QualifiedNameCollection>();
-            QualifiedNameCollection parentPath = new QualifiedNameCollection();
+            var foundNodes = new Dictionary<NodeId, QualifiedNameCollection>();
+            var parentPath = new QualifiedNameCollection();
 
             for (int ii = supertypes.Count - 1; ii >= 0; ii--) {
                 CollectFields(session, (NodeId) supertypes[ii].NodeId, parentPath, fields, fieldNodeIds, foundNodes);
@@ -786,8 +787,8 @@ namespace OpcUaHelper {
         /// <param name="fieldNodeIds">The node id for the declaration of the field.</param>
         public static void CollectFieldsForInstance(Session session, NodeId instanceId,
             SimpleAttributeOperandCollection fields, List<NodeId> fieldNodeIds) {
-            Dictionary<NodeId, QualifiedNameCollection> foundNodes = new Dictionary<NodeId, QualifiedNameCollection>();
-            QualifiedNameCollection parentPath = new QualifiedNameCollection();
+            var foundNodes = new Dictionary<NodeId, QualifiedNameCollection>();
+            var parentPath = new QualifiedNameCollection();
             CollectFields(session, instanceId, parentPath, fields, fieldNodeIds, foundNodes);
         }
 
@@ -808,7 +809,7 @@ namespace OpcUaHelper {
             List<NodeId> fieldNodeIds,
             Dictionary<NodeId, QualifiedNameCollection> foundNodes) {
             // find all of the children of the field.
-            BrowseDescription nodeToBrowse = new BrowseDescription();
+            var nodeToBrowse = new BrowseDescription();
 
             nodeToBrowse.NodeId = nodeId;
             nodeToBrowse.BrowseDirection = BrowseDirection.Forward;
@@ -817,29 +818,29 @@ namespace OpcUaHelper {
             nodeToBrowse.NodeClassMask = (uint) (NodeClass.Object | NodeClass.Variable);
             nodeToBrowse.ResultMask = (uint) BrowseResultMask.All;
 
-            ReferenceDescriptionCollection children = FormUtils.Browse(session, nodeToBrowse, false);
+            var children = FormUtils.Browse(session, nodeToBrowse, false);
 
             if (children == null) {
                 return;
             }
 
             // process the children.
-            for (int ii = 0; ii < children.Count; ii++) {
-                ReferenceDescription child = children[ii];
+            for (var ii = 0; ii < children.Count; ii++) {
+                var child = children[ii];
 
                 if (child.NodeId.IsAbsolute) {
                     continue;
                 }
 
                 // construct browse path.
-                QualifiedNameCollection browsePath = new QualifiedNameCollection(parentPath);
+                var browsePath = new QualifiedNameCollection(parentPath);
                 browsePath.Add(child.BrowseName);
 
                 // check if the browse path is already in the list.
                 int index = ContainsPath(fields, browsePath);
 
                 if (index < 0) {
-                    SimpleAttributeOperand field = new SimpleAttributeOperand();
+                    var field = new SimpleAttributeOperand();
 
                     field.TypeDefinitionId = ObjectTypeIds.BaseEventType;
                     field.BrowsePath = browsePath;
@@ -850,7 +851,7 @@ namespace OpcUaHelper {
                 }
 
                 // recusively find all of the children.
-                NodeId targetId = (NodeId) child.NodeId;
+                var targetId = (NodeId) child.NodeId;
 
                 // need to guard against loops.
                 if (!foundNodes.ContainsKey(targetId)) {
@@ -870,16 +871,16 @@ namespace OpcUaHelper {
         /// </returns>
         private static int ContainsPath(SimpleAttributeOperandCollection selectClause,
             QualifiedNameCollection browsePath) {
-            for (int ii = 0; ii < selectClause.Count; ii++) {
-                SimpleAttributeOperand field = selectClause[ii];
+            for (var ii = 0; ii < selectClause.Count; ii++) {
+                var field = selectClause[ii];
 
                 if (field.BrowsePath.Count != browsePath.Count) {
                     continue;
                 }
 
-                bool match = true;
+                var match = true;
 
-                for (int jj = 0; jj < field.BrowsePath.Count; jj++) {
+                for (var jj = 0; jj < field.BrowsePath.Count; jj++) {
                     if (field.BrowsePath[jj] != browsePath[jj]) {
                         match = false;
                         break;
